@@ -14,7 +14,7 @@ const adSchema = z.object({
 });
 
 export const createAdPurchase = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => adSchema.parse(data))
+  .validator((data: unknown) => adSchema.parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadMpesaConfig, stkPush } = await import("./mpesa.server");
@@ -103,7 +103,7 @@ export const createAdPurchase = createServerFn({ method: "POST" })
   });
 
 export const getAdStatus = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ adCode: z.string().trim().min(4).max(20) }).parse(data))
+  .validator((data: unknown) => z.object({ adCode: z.string().trim().min(4).max(20) }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadMpesaConfig, stkQuery } = await import("./mpesa.server");

@@ -34,7 +34,7 @@ function normalize(input: string): string {
 }
 
 export const createOrder = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => checkoutSchema.parse(data))
+  .validator((data: unknown) => checkoutSchema.parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadMpesaConfig, stkPush } = await import("./mpesa.server");
@@ -174,7 +174,7 @@ export const createOrder = createServerFn({ method: "POST" })
   });
 
 export const getOrder = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ orderCode: z.string().trim().min(4).max(20) }).parse(data))
+  .validator((data: unknown) => z.object({ orderCode: z.string().trim().min(4).max(20) }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadMpesaConfig, stkQuery } = await import("./mpesa.server");
@@ -188,18 +188,12 @@ export const getOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!order) return { ok: false as const, message: "Order not found." };
 
-    // Fallback reconciliation when the Daraja callback has not arrived yet.
-    // The STK prompt lives for ~60s on the handset, so we never declare failure
-    // before the customer has had a chance to enter their PIN.
     const ageMs = Date.now() - new Date(order.created_at as string).getTime();
     if (order.payment_status === "processing" && order.checkout_request_id && ageMs > 12_000) {
       const cfg = await loadMpesaConfig();
       if (cfg?.enabled) {
         try {
           const q = await stkQuery(cfg, order.checkout_request_id);
-          // null  -> Daraja is still processing (HTTP 500 / 500.001.1001). Keep waiting.
-          // "0"   -> paid.
-          // 1032  -> cancelled by user, 1037 -> no response, 1 -> insufficient funds, 2001 -> wrong PIN.
           const terminalFailure = ["1", "1032", "1037", "1001", "2001", "1019", "1025", "9999"];
           if (q.resultCode === "0") {
             const patch = { payment_status: "paid", status: "paid", payment_message: q.description };
@@ -222,7 +216,6 @@ export const getOrder = createServerFn({ method: "POST" })
             order.payment_message = message;
           }
         } catch (err) {
-          // A query error is not a payment failure — stay in "processing".
           console.error("[checkout] stk query error", err);
         }
       }
@@ -261,7 +254,7 @@ export const getOrder = createServerFn({ method: "POST" })
   });
 
 export const trackOrders = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ email: z.string().trim().email().max(200), phone: z.string().trim().min(9).max(20) })
       .parse(data),
@@ -309,9 +302,8 @@ export const trackOrders = createServerFn({ method: "POST" })
     };
   });
 
-/** Re-sends the M-Pesa STK push for an order that has not been paid yet. */
 export const retryPayment = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         orderCode: z.string().trim().min(4).max(20),
@@ -376,9 +368,8 @@ export const retryPayment = createServerFn({ method: "POST" })
     }
   });
 
-/** Public link that always points at the store's own domain. */
 export const getPayLink = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ orderCode: z.string().trim().min(4).max(20) }).parse(data))
+  .validator((data: unknown) => z.object({ orderCode: z.string().trim().min(4).max(20) }).parse(data))
   .handler(async ({ data }) => {
     const { publicBaseUrl } = await import("./notify.server");
     const { getRequest } = await import("@tanstack/react-start/server");

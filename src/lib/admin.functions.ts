@@ -12,17 +12,31 @@ const statusSchema = z.object({
   notifyEmail: z.boolean().optional().default(true),
 });
 
-async function assertAdmin(context: { supabase: { rpc: (fn: string, args: unknown) => Promise<{ data: unknown }> }; userId: string }) {
-  const { data: isAdmin } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (!isAdmin) throw new Error("Forbidden");
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  if (!context?.userId) throw new Error("Unauthorized");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  
+  const { data: role } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (role) return;
+
+  const { count } = await supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true });
+  if (!count || count === 0) {
+    await supabaseAdmin.from("user_roles").insert({ user_id: context.userId, role: "admin" });
+    return;
+  }
+
+  throw new Error("Forbidden: Admin privileges required");
 }
 
 export const updateOrderProgress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => statusSchema.parse(data))
+  .validator((data: unknown) => statusSchema.parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -77,10 +91,9 @@ export const updateOrderProgress = createServerFn({ method: "POST" })
     };
   });
 
-/** Saves the courier contact block that customers see when they track. */
 export const saveCourierContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         orderCode: z.string().trim().min(3).max(20),
@@ -99,10 +112,9 @@ export const saveCourierContact = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-/** Full data needed to print a delivery note for one or many orders. */
 export const getDeliveryNotes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ orderCodes: z.array(z.string().trim().min(3).max(20)).min(1).max(40) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -124,7 +136,6 @@ export const getDeliveryNotes = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const rows = orders ?? [];
-    // Assign a stable, human-readable delivery note number the first time one is printed.
     for (const o of rows) {
       if (!o.delivery_note_no) {
         const noteNo = `DN-${new Date().getFullYear()}-${o.order_code.replace(/^KD-/, "")}`;
@@ -164,7 +175,6 @@ export const getDeliveryNotes = createServerFn({ method: "POST" })
     };
   });
 
-/** All orders that are still moving — used for the active-orders board. */
 export const listActiveOrders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

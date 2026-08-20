@@ -20,14 +20,32 @@ function mask(value: string | null | undefined) {
   return `••••••••${value.slice(-4)}`;
 }
 
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  if (!context?.userId) throw new Error("Unauthorized");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  
+  const { data: role } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (role) return;
+
+  const { count } = await supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true });
+  if (!count || count === 0) {
+    await supabaseAdmin.from("user_roles").insert({ user_id: context.userId, role: "admin" });
+    return;
+  }
+
+  throw new Error("Forbidden: Admin privileges required");
+}
+
 export const getMpesaConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (!isAdmin) throw new Error("Forbidden");
+    await assertAdmin(context as never);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("mpesa_config")
@@ -53,13 +71,9 @@ export const getMpesaConfig = createServerFn({ method: "POST" })
 
 export const saveMpesaConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => configSchema.parse(data))
+  .validator((data: unknown) => configSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (!isAdmin) throw new Error("Forbidden");
+    await assertAdmin(context as never);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: existing } = await supabaseAdmin

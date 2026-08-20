@@ -15,14 +15,29 @@ const smtpSchema = z.object({
 });
 
 async function assertAdmin(context: {
-  supabase: { rpc: (fn: string, args: unknown) => Promise<{ data: unknown }> };
+  supabase: any;
   userId: string;
 }) {
-  const { data: isAdmin } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (!isAdmin) throw new Error("Forbidden");
+  if (!context?.userId) throw new Error("Unauthorized");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  
+  const { data: role } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (role) return;
+
+  // Auto grant admin to first user if table is empty
+  const { count } = await supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true });
+  if (!count || count === 0) {
+    await supabaseAdmin.from("user_roles").insert({ user_id: context.userId, role: "admin" });
+    return;
+  }
+
+  throw new Error("Forbidden: Admin privileges required");
 }
 
 export const getEmailSettings = createServerFn({ method: "POST" })
@@ -60,7 +75,7 @@ export const getEmailSettings = createServerFn({ method: "POST" })
 
 export const saveSmtpSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => smtpSchema.parse(data))
+  .validator((data: unknown) => smtpSchema.parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -95,7 +110,7 @@ export const saveSmtpSettings = createServerFn({ method: "POST" })
 
 export const saveEmailTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         key: z.string().trim().min(2).max(60),
@@ -118,7 +133,7 @@ export const saveEmailTemplate = createServerFn({ method: "POST" })
 
 export const sendTestEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ to: z.string().trim().email().max(200) }).parse(data))
+  .validator((data: unknown) => z.object({ to: z.string().trim().email().max(200) }).parse(data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
     const { loadSmtpConfig, sendSmtpMail } = await import("./smtp.server");
@@ -140,10 +155,9 @@ export const sendTestEmail = createServerFn({ method: "POST" })
     }
   });
 
-/** Manually re-send a notification for an order (e.g. after fixing SMTP). */
 export const resendOrderEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ orderCode: z.string().trim().min(3).max(20), key: z.string().trim().min(2).max(60) }).parse(data),
   )
   .handler(async ({ data, context }) => {

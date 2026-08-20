@@ -2,10 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 export const verifyCertificate = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ code: z.string().trim().min(4).max(60) }).parse(data))
+  .validator((data: unknown) => z.object({ code: z.string().trim().min(4).max(60) }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // Accept a full scanned URL (…/verify?code=KD-XXXX-XXXX) or a bare code.
     const raw = data.code.trim();
     const match = /code=([A-Za-z0-9-]+)/.exec(raw);
     const code = (match?.[1] ?? raw).trim().toUpperCase();
@@ -22,7 +21,6 @@ export const verifyCertificate = createServerFn({ method: "POST" })
       .update({ scans: (cert.scans ?? 0) + 1, last_scanned_at: new Date().toISOString() })
       .eq("code", code);
 
-    // Pull the live order so the buyer name and payment date are always accurate.
     let buyerName = cert.buyer_name ?? cert.issued_to ?? null;
     let paidAt = cert.paid_at as string | null;
     let orderCode = cert.order_code as string | null;
