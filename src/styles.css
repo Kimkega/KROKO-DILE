@@ -1,0 +1,203 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * KROKO DILE design system — antique gold on dark crocodile brown.
+ * All colors are oklch semantic tokens. Never hardcode colors in components.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-deep: var(--gold-deep);
+  --color-cocoa: var(--cocoa);
+  --color-ivory: var(--ivory);
+  --color-success: var(--success);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Cormorant Garamond", "Times New Roman", serif;
+  --font-sans: "Jost", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.25rem;
+  --background: oklch(0.985 0.008 85);
+  --foreground: oklch(0.24 0.038 55);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.038 55);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.038 55);
+  --primary: oklch(0.24 0.038 55);
+  --primary-foreground: oklch(0.965 0.03 88);
+  --secondary: oklch(0.945 0.022 85);
+  --secondary-foreground: oklch(0.28 0.04 55);
+  --muted: oklch(0.945 0.018 85);
+  --muted-foreground: oklch(0.52 0.03 62);
+  --accent: oklch(0.74 0.12 82);
+  --accent-foreground: oklch(0.2 0.035 55);
+  --destructive: oklch(0.55 0.19 27);
+  --destructive-foreground: oklch(0.98 0.01 85);
+  --success: oklch(0.55 0.13 150);
+  --border: oklch(0.89 0.02 82);
+  --input: oklch(0.89 0.02 82);
+  --ring: oklch(0.74 0.12 82);
+
+  --gold: oklch(0.74 0.12 82);
+  --gold-soft: oklch(0.86 0.08 88);
+  --gold-deep: oklch(0.6 0.11 72);
+  --cocoa: oklch(0.24 0.038 55);
+  --ivory: oklch(0.97 0.012 88);
+
+  --chart-1: oklch(0.74 0.12 82);
+  --chart-2: oklch(0.6 0.11 72);
+  --chart-3: oklch(0.4 0.06 60);
+  --chart-4: oklch(0.86 0.08 88);
+  --chart-5: oklch(0.24 0.038 55);
+  --sidebar: oklch(0.24 0.038 55);
+  --sidebar-foreground: oklch(0.95 0.02 85);
+  --sidebar-primary: oklch(0.74 0.12 82);
+  --sidebar-primary-foreground: oklch(0.2 0.035 55);
+  --sidebar-accent: oklch(0.3 0.04 55);
+  --sidebar-accent-foreground: oklch(0.95 0.02 85);
+  --sidebar-border: oklch(0.34 0.04 55);
+  --sidebar-ring: oklch(0.74 0.12 82);
+
+  --gradient-gold: linear-gradient(
+    135deg,
+    oklch(0.6 0.11 72) 0%,
+    oklch(0.86 0.09 88) 45%,
+    oklch(0.68 0.12 78) 100%
+  );
+  --gradient-cocoa: linear-gradient(160deg, oklch(0.28 0.04 55) 0%, oklch(0.18 0.03 50) 100%);
+  --shadow-lux: 0 24px 60px -28px oklch(0.24 0.038 55 / 0.45);
+  --shadow-gold: 0 14px 34px -14px oklch(0.6 0.11 72 / 0.55);
+}
+
+.dark {
+  --background: oklch(0.18 0.03 52);
+  --foreground: oklch(0.95 0.02 85);
+  --card: oklch(0.23 0.035 54);
+  --card-foreground: oklch(0.95 0.02 85);
+  --popover: oklch(0.23 0.035 54);
+  --popover-foreground: oklch(0.95 0.02 85);
+  --primary: oklch(0.74 0.12 82);
+  --primary-foreground: oklch(0.18 0.03 52);
+  --secondary: oklch(0.28 0.04 55);
+  --secondary-foreground: oklch(0.95 0.02 85);
+  --muted: oklch(0.28 0.04 55);
+  --muted-foreground: oklch(0.75 0.03 80);
+  --accent: oklch(0.74 0.12 82);
+  --accent-foreground: oklch(0.18 0.03 52);
+  --destructive: oklch(0.65 0.19 27);
+  --destructive-foreground: oklch(0.98 0.01 85);
+  --success: oklch(0.68 0.13 150);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.74 0.12 82);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility text-gold-gradient {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-gold-gradient {
+  background: var(--gradient-gold);
+}
+
+@utility bg-cocoa-gradient {
+  background: var(--gradient-cocoa);
+}
+
+@utility shadow-lux {
+  box-shadow: var(--shadow-lux);
+}
+
+@utility shadow-gold {
+  box-shadow: var(--shadow-gold);
+}
+
+@utility croc-texture {
+  background-image:
+    radial-gradient(circle at 30% 30%, oklch(1 0 0 / 0.08) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 70%, oklch(0 0 0 / 0.1) 0 2px, transparent 3px);
+  background-size: 18px 18px;
+}
+
+@utility croc-texture-soft {
+  background-image:
+    radial-gradient(circle at 30% 30%, oklch(1 0 0 / 0.035) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 70%, oklch(0 0 0 / 0.04) 0 2px, transparent 3px);
+  background-size: 18px 18px;
+}
+
+
+@utility tracking-luxe {
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
