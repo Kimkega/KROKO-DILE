@@ -49,6 +49,9 @@ export function Navbar() {
         <Link to="/" className="flex items-center gap-3">
           <img
             src={settings?.logo_url ? mediaUrl(settings.logo_url) : logoUrl}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = logoUrl;
+            }}
             alt={`${settings?.site_name ?? "KROKO DILE"} logo`}
             className="h-11 w-11 rounded-full object-contain bg-cocoa-gradient p-1 shadow-gold"
           />

@@ -27,7 +27,11 @@ export function Footer() {
               <li>
                 <Link to="/verify">Verify authenticity</Link>
               </li>
-
+              <li>
+                <Link to="/kingdanstore" className="text-gold-gradient font-medium hover:underline">
+                  Staff / Admin Portal
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
@@ -58,8 +62,11 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-sidebar-border px-6 py-5 text-center text-[10px] tracking-luxe text-sidebar-foreground/50">
-          © {new Date().getFullYear()} {s?.site_name ?? "KROKO DILE"} · Nairobi, Kenya
+        <div className="flex flex-col items-center justify-between gap-2 border-t border-sidebar-border px-6 py-5 sm:flex-row text-[10px] tracking-luxe text-sidebar-foreground/50">
+          <span>© {new Date().getFullYear()} {s?.site_name ?? "KROKO DILE"} · Nairobi, Kenya</span>
+          <Link to="/kingdanstore" className="hover:text-accent">
+            Admin Portal (/kingdanstore)
+          </Link>
         </div>
       </div>
     </footer>

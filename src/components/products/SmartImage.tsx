@@ -1,11 +1,9 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/lib/media";
 
-/**
- * Product photography arrives in every shape imaginable. Instead of cropping,
- * we letterbox the real image over a blurred copy of itself — nothing is cut
- * off, every tile stays the same size, and it scales with the viewport.
- */
+const PLACEHOLDER_SRC = "/placeholder-bag.png";
+
 export function SmartImage({
   path,
   alt,
@@ -19,10 +17,10 @@ export function SmartImage({
   ratio?: string;
   eager?: boolean;
 }) {
-  const src = mediaUrl(path);
-  if (!src) {
-    return <div className={cn("croc-texture rounded-sm bg-cocoa-gradient", ratio, className)} />;
-  }
+  const [hasError, setHasError] = useState(false);
+  const initialSrc = path ? mediaUrl(path) : PLACEHOLDER_SRC;
+  const src = hasError ? PLACEHOLDER_SRC : initialSrc;
+
   return (
     <div className={cn("relative overflow-hidden rounded-sm bg-secondary", ratio, className)}>
       <img
@@ -31,12 +29,14 @@ export function SmartImage({
         aria-hidden
         loading="lazy"
         className="absolute inset-0 size-full scale-110 object-cover opacity-40 blur-xl"
+        onError={() => setHasError(true)}
       />
       <img
         src={src}
         alt={alt}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
+        onError={() => setHasError(true)}
         className="relative size-full object-contain transition-transform duration-700 group-hover:scale-105"
       />
     </div>
