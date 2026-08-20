@@ -16,7 +16,7 @@ export function Footer() {
             </p>
           </div>
           <div>
-            <p className="text-[10px] tracking-luxe text-sidebar-primary">Shop</p>
+            <p className="text-[10px] tracking-luxe text-sidebar-primary">Shop & Info</p>
             <ul className="mt-4 space-y-2 text-sm text-sidebar-foreground/75">
               <li>
                 <Link to="/shop">All bags</Link>
@@ -28,8 +28,11 @@ export function Footer() {
                 <Link to="/verify">Verify authenticity</Link>
               </li>
               <li>
+                <Link to="/terms">Terms & Conditions</Link>
+              </li>
+              <li>
                 <Link to="/kingdanstore" className="text-gold-gradient font-medium hover:underline">
-                  Staff / Admin Portal
+                  Admin Portal (/kingdanstore)
                 </Link>
               </li>
             </ul>
@@ -64,9 +67,14 @@ export function Footer() {
         </div>
         <div className="flex flex-col items-center justify-between gap-2 border-t border-sidebar-border px-6 py-5 sm:flex-row text-[10px] tracking-luxe text-sidebar-foreground/50">
           <span>© {new Date().getFullYear()} {s?.site_name ?? "KROKO DILE"} · Nairobi, Kenya</span>
-          <Link to="/kingdanstore" className="hover:text-accent">
-            Admin Portal (/kingdanstore)
-          </Link>
+          <div className="flex gap-4">
+            <Link to="/terms" className="hover:text-accent">
+              Terms & Privacy
+            </Link>
+            <Link to="/kingdanstore" className="hover:text-accent">
+              Admin Portal
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

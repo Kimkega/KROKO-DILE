@@ -8,12 +8,33 @@ function env(...names: string[]): string {
   return "";
 }
 
+// In-memory cache for high-traffic image serving
+interface CachedMedia {
+  data: Uint8Array;
+  contentType: string;
+  timestamp: number;
+}
+const mediaCache = new Map<string, CachedMedia>();
+const MAX_CACHE_AGE_MS = 60 * 60 * 1000; // 1 hour
+
 export const Route = createFileRoute("/api/public/media/$")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
+      GET: async ({ params, request }) => {
         const path = params._splat ?? "";
         if (!path || path.includes("..")) return new Response("Not found", { status: 404 });
+
+        // Serve from memory cache if fresh
+        const cached = mediaCache.get(path);
+        if (cached && Date.now() - cached.timestamp < MAX_CACHE_AGE_MS) {
+          return new Response(cached.data, {
+            headers: {
+              "Content-Type": cached.contentType,
+              "Cache-Control": "public, max-age=31536000, immutable",
+              "X-Cache": "HIT",
+            },
+          });
+        }
 
         const url = env("SUPABASE_URL", "VITE_SUPABASE_URL");
         const key = env("SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_ANON_KEY");
@@ -25,7 +46,6 @@ export const Route = createFileRoute("/api/public/media/$")({
         const encodedPath = path.split("/").map(encodeURIComponent).join("/");
         const cleanUrl = url.replace(/\/+$/, "");
         
-        // Try public storage endpoint first, then authenticated storage endpoint
         const targets = [
           `${cleanUrl}/storage/v1/object/public/media/${encodedPath}`,
           `${cleanUrl}/storage/v1/object/media/${encodedPath}`,
@@ -35,10 +55,22 @@ export const Route = createFileRoute("/api/public/media/$")({
           try {
             const upstream = await fetch(target, { headers: { apikey: key } });
             if (upstream.ok && upstream.body) {
-              return new Response(upstream.body, {
+              const arrayBuffer = await upstream.arrayBuffer();
+              const buffer = new Uint8Array(arrayBuffer);
+              const contentType = upstream.headers.get("content-type") ?? "image/jpeg";
+
+              // Cache in memory for high performance
+              mediaCache.set(path, {
+                data: buffer,
+                contentType,
+                timestamp: Date.now(),
+              });
+
+              return new Response(buffer, {
                 headers: {
-                  "Content-Type": upstream.headers.get("content-type") ?? "image/png",
+                  "Content-Type": contentType,
                   "Cache-Control": "public, max-age=31536000, immutable",
+                  "X-Cache": "MISS",
                 },
               });
             }
