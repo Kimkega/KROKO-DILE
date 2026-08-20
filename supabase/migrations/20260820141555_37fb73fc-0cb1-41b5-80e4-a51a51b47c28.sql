@@ -52,10 +52,13 @@ GRANT SELECT ON public.seo_settings TO anon, authenticated;
 GRANT INSERT, UPDATE, DELETE ON public.seo_settings TO authenticated;
 GRANT ALL ON public.seo_settings TO service_role;
 ALTER TABLE public.seo_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "seo settings public read" ON public.seo_settings;
 CREATE POLICY "seo settings public read" ON public.seo_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "seo settings admin write" ON public.seo_settings;
 CREATE POLICY "seo settings admin write" ON public.seo_settings FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS seo_settings_touch ON public.seo_settings;
 CREATE TRIGGER seo_settings_touch BEFORE UPDATE ON public.seo_settings
 FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
@@ -83,10 +86,13 @@ GRANT SELECT ON public.seo_pages TO anon, authenticated;
 GRANT INSERT, UPDATE, DELETE ON public.seo_pages TO authenticated;
 GRANT ALL ON public.seo_pages TO service_role;
 ALTER TABLE public.seo_pages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "seo pages public read" ON public.seo_pages;
 CREATE POLICY "seo pages public read" ON public.seo_pages FOR SELECT USING (true);
+DROP POLICY IF EXISTS "seo pages admin write" ON public.seo_pages;
 CREATE POLICY "seo pages admin write" ON public.seo_pages FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS seo_pages_touch ON public.seo_pages;
 CREATE TRIGGER seo_pages_touch BEFORE UPDATE ON public.seo_pages
 FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
@@ -115,10 +121,13 @@ GRANT SELECT ON public.faqs TO anon, authenticated;
 GRANT INSERT, UPDATE, DELETE ON public.faqs TO authenticated;
 GRANT ALL ON public.faqs TO service_role;
 ALTER TABLE public.faqs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "faqs public read" ON public.faqs;
 CREATE POLICY "faqs public read" ON public.faqs FOR SELECT USING (active = true);
+DROP POLICY IF EXISTS "faqs admin write" ON public.faqs;
 CREATE POLICY "faqs admin write" ON public.faqs FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS faqs_touch ON public.faqs;
 CREATE TRIGGER faqs_touch BEFORE UPDATE ON public.faqs
 FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
@@ -133,6 +142,7 @@ ON CONFLICT DO NOTHING;
 
 -- 7. Storage: scope public media reads to public content prefixes only
 DROP POLICY IF EXISTS "media public read" ON storage.objects;
+DROP POLICY IF EXISTS "media public prefixes read" ON storage.objects;
 CREATE POLICY "media public prefixes read" ON storage.objects FOR SELECT TO anon, authenticated
 USING (
   bucket_id = 'media'
